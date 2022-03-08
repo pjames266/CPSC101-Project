@@ -4,7 +4,7 @@ import os
 pygame.font.init()
 pygame.mixer.init()
 
-WIDTH, HEIGHT = 900, 500
+WIDTH, HEIGHT = 1500, 850
 
 BORDER = pygame.Rect((WIDTH/2)-5, 0, 10, HEIGHT)
 
@@ -19,7 +19,10 @@ YELLOW = (255,255,0)
 GREEN = (0,255,0)
 BLUE = (0,0,255)
 
+GRASS = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grassy.png')), (WIDTH, HEIGHT))
+
 def draw_window():
+    WIN.blit(GRASS, (0,0))
 
     pygame.display.update()
 
@@ -35,6 +38,8 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+
+        draw_window()
 
 if __name__== "__main__":
     main()

@@ -1,0 +1,30 @@
+CPSC101 Project Outline
+
+Class Sprite
+  Pos (x,y)
+  Collision 
+    Must not be within wall
+
+Class Fuel(Sprite)
+  Value (int) 
+    Amount at which fuel helps
+  Respawn(if collected by player)
+    Randomize pos
+  Different types of fuels?
+
+Class Living(Sprite)
+  Movement (x,y,-x,-y)
+    Direction (8 different facings based on direction of travel)
+
+Class Player(Living)
+  Health (int)
+    Decrease when enemy attacks
+  Torch strength (int) - radius of view
+    Increase when fuel collected
+    Decrease over time
+  Collision with fuel
+  WASD controls
+
+Class Enemy(Living)
+  Damage inflicting
+  AI influenced movement

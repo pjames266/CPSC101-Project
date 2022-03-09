@@ -19,7 +19,7 @@ YELLOW = (255,255,0)
 GREEN = (0,255,0)
 BLUE = (0,0,255)
 
-GRASS = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grassy.png')), (WIDTH, HEIGHT))
+GRASS = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'title_card.png')), (WIDTH, HEIGHT))
 
 def draw_window():
     WIN.blit(GRASS, (0,0))

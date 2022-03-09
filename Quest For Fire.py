@@ -9,7 +9,7 @@ WIDTH, HEIGHT = 1500, 850
 BORDER = pygame.Rect((WIDTH/2)-5, 0, 10, HEIGHT)
 
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Quest For Fuel 1.0")
+pygame.display.set_caption("Quest For Fire 1.0")
 FPS = 60
 
 WHITE = (255,255,255)

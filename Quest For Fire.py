@@ -39,6 +39,17 @@ class Sprite:
 
         self.sprite = pygame.Rect(x, y, width, height)
 
+class Shadow(Sprite):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+
+    def radius(self, other):
+        return ((self.sprite.x-other.sprite.x)**2 + (self.sprite.y - other.sprite.y)**2)**0.5
+
+    def show(self):
+        pygame.draw.rect(WIN, BLACK, self.sprite)
+
+
 class Fuel(Sprite):
 
     def __init__(self, x, y, width, height, fuel):
@@ -90,13 +101,14 @@ class Player(Entity):
 class World:
 
     def __init__(self):
-        self.player = Player(500,500,TILESIZE,TILESIZE,100,6)
+        self.player = Player(500,500,TILESIZE,TILESIZE,300,6)
         self.fuel = []
     def draw(self):
         WIN.fill(DARKGREY)
         self.draw_grid()
         self.player.show()
         self.collect_fuel()
+        self.draw_shadow()
         pygame.display.update()
 
     def draw_grid(self):
@@ -113,6 +125,7 @@ class World:
         for obj in self.fuel:
             if self.player.sprite.colliderect(obj.sprite):
                 self.fuel.remove(obj)
+                self.player.hp += obj.fuel
 
             obj.show()
 
@@ -121,7 +134,16 @@ class World:
         if r == 1:
             self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, 20))
        
-            
+    def draw_shadow(self):
+        shadow = []
+        for x in range(0, WIDTH, TILESIZE):
+            for y in range(0, HEIGHT, TILESIZE):
+                shadow.append(Shadow(x,y,TILESIZE,TILESIZE))
+
+        for obj in shadow:
+            if obj.radius(self.player)>self.player.hp:
+                obj.show()
+
 
 def main():
 
@@ -143,6 +165,7 @@ def main():
         world.player.player_movement(keys_pressed)
         world.draw()
         world.collect_fuel()
+        
 
 
 if __name__== "__main__":

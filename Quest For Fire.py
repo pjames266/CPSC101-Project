@@ -1,5 +1,6 @@
 import pygame
 import os
+import random
 
 pygame.init()
 pygame.font.init()
@@ -41,8 +42,12 @@ class Sprite:
 class Fuel(Sprite):
 
     def __init__(self, x, y, width, height, fuel):
-        super().__init__(x, y,width, height)
+        super().__init__(x, y, width, height)
         self.fuel = fuel
+
+    def show(self):
+        FUEL = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'torch.png')), (self.sprite.width, self.sprite.height))
+        WIN.blit(FUEL, (self.sprite.x,self.sprite.y))
 
 class Entity(Sprite):
 
@@ -86,11 +91,12 @@ class World:
 
     def __init__(self):
         self.player = Player(500,500,TILESIZE,TILESIZE,100,6)
-
+        self.fuel = []
     def draw(self):
         WIN.fill(DARKGREY)
         self.draw_grid()
         self.player.show()
+        self.collect_fuel()
         pygame.display.update()
 
     def draw_grid(self):
@@ -103,6 +109,20 @@ class World:
             for y in range(0, HEIGHT, TILESIZE):
                 WIN.blit(GRASS, (x,y))
         
+    def collect_fuel(self):
+        for obj in self.fuel:
+            if self.player.sprite.colliderect(obj.sprite):
+                self.fuel.remove(obj)
+
+            obj.show()
+
+        r = random.randint(0,100)
+
+        if r == 1:
+            self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, 20))
+       
+            
+
 def main():
 
     world = World()
@@ -122,6 +142,7 @@ def main():
         
         world.player.player_movement(keys_pressed)
         world.draw()
+        world.collect_fuel()
 
 
 if __name__== "__main__":

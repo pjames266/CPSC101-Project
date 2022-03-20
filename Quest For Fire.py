@@ -28,7 +28,13 @@ DARKGREY = (40, 40, 40)
 LIGHTGREY = (100, 100, 100)
 
 BANNER = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'title_card.png')), (WIDTH, HEIGHT))
-GRASS = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_1.png')), (TILESIZE, TILESIZE))
+GRASS1 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_1.png')), (TILESIZE, TILESIZE))
+GRASS2 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_2.png')), (TILESIZE, TILESIZE))
+GRASS3 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_3.png')), (TILESIZE, TILESIZE))
+GRASS4 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_4.png')), (TILESIZE, TILESIZE))
+GRASS5 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_5.png')), (TILESIZE, TILESIZE))
+GRASS6 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_6.png')), (TILESIZE, TILESIZE))
+GRASS7 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_7.png')), (TILESIZE, TILESIZE))
 PLAYER_TEMP = pygame.image.load(os.path.join('Assets','sam.png'))
 
 
@@ -36,23 +42,87 @@ PLAYER_TEMP = pygame.image.load(os.path.join('Assets','sam.png'))
 class Sprite:
 
     def __init__(self, x, y, width, height):
+        """Deafult Class for all Sprites
 
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+        """
         self.sprite = pygame.Rect(x, y, width, height)
 
 class Shadow(Sprite):
     def __init__(self, x, y, width, height):
+        """Shadow Object
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+        """
         super().__init__(x, y, width, height)
 
     def radius(self, other):
+        """Finds radius
+
+        Args:
+            other (obj): object you want to find distance from
+
+        Returns:
+            float: radius
+        """
         return ((self.sprite.x-other.sprite.x)**2 + (self.sprite.y - other.sprite.y)**2)**0.5
 
     def show(self):
         pygame.draw.rect(WIN, BLACK, self.sprite)
 
+class Wall(Sprite):
+    
+    def __init__(self, x, y, width, height):
+        """Wall Object
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+        """
+        super().__init__(x, y, width, height)
+    
+    def show(self):
+        pygame.draw.rect(WIN, DARKGREY, self.sprite)
+
+class Water(Sprite):
+    
+    def __init__(self, x, y, width, height):
+        """Water Object
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+        """
+        super().__init__(x, y, width, height)
+    
+    def show(self):
+        pygame.draw.rect(WIN, BLUE, self.sprite)
+    
 
 class Fuel(Sprite):
 
     def __init__(self, x, y, width, height, fuel):
+        """Fuel Object
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+            fuel (int): Random value that is the amount of fuel it gives
+        """
         super().__init__(x, y, width, height)
         self.fuel = fuel
 
@@ -63,6 +133,16 @@ class Fuel(Sprite):
 class Entity(Sprite):
 
     def __init__(self, x, y, width, height, hp, vel):
+        """Class for all moving entities
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+            hp (int): Health or vision
+            vel (int): movement speed
+        """
         super().__init__(x, y,width, height)
         self.hp = hp
         self.vel = vel
@@ -76,21 +156,49 @@ class Enemy(Entity):
 class Player(Entity):
     
     def __init__(self, x, y, width, height, hp, vel):
+        """_summary_
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+            hp (int): Health or vision
+            vel (int): movement speed
+        """
         super().__init__(x, y, width, height, hp, vel)
         
 
-    def player_movement(self, keys_pressed):
-        if keys_pressed[pygame.K_a] and self.sprite.x - self.vel > 0: #left
-            self.sprite.x -= self.vel
-        
-        if keys_pressed[pygame.K_d] and self.sprite.x + self.vel + self.sprite.width < WIDTH: #right
-            self.sprite.x += self.vel
+    def player_movement(self, keys_pressed, walls):
+        """Facilitates Player Movement
 
-        if keys_pressed[pygame.K_w] and self.sprite.y - self.vel > 0: #Up
-            self.sprite.y -= self.vel
+        Args:
+            keys_pressed (sequence[bool]): Event that stores key inputs
+            walls (list): List of Objects that are obsticles
+        """
+        if not self.collide_with_wall(walls):
+            if keys_pressed[pygame.K_a] and self.sprite.x - self.vel > 0: #left
+                self.sprite.x -= self.vel
+            
+            if keys_pressed[pygame.K_d] and self.sprite.x + self.vel + self.sprite.width < WIDTH: #right
+                self.sprite.x += self.vel
 
-        if keys_pressed[pygame.K_s] and self.sprite.y + self.vel + self.sprite.height < HEIGHT - 10: #down
-            self.sprite.y += self.vel
+            if keys_pressed[pygame.K_w] and self.sprite.y - self.vel > 0: #Up
+                self.sprite.y -= self.vel
+
+            if keys_pressed[pygame.K_s] and self.sprite.y + self.vel + self.sprite.height < HEIGHT - 10: #down
+                self.sprite.y += self.vel
+
+    def collide_with_wall(self, walls):
+
+        for wall in walls:
+            if self.sprite.colliderect(wall.sprite):
+                
+                return True
+                
+        return False
+
+            
 
     def show(self):
 
@@ -101,14 +209,46 @@ class Player(Entity):
 class World:
 
     def __init__(self):
-        self.player = Player(500,500,TILESIZE,TILESIZE,300,6)
+        
+        self.starting_hp = 300
+        self.player = Player(500,500,TILESIZE,TILESIZE,self.starting_hp,6)
         self.fuel = []
-    def draw(self):
+
+        self.map_data = []
+        with open(os.path.join('Assets', 'map.txt'), 'rt') as f:
+            for line in f:
+                self.map_data.append(line)
+        
+        self.shadow_growth = 0.08
+
+        self.walls = []
+        self.water = []
+
+    
+    def draw_game(self):
+        """Draws all the main game features
+        """
         WIN.fill(DARKGREY)
         self.draw_grid()
         self.player.show()
         self.collect_fuel()
+        self.draw_walls()
         self.draw_shadow()
+        pygame.display.update()
+
+    def draw_start(self):
+        """Draws Start Screen
+        """
+
+        WIN.blit(BANNER, (0,0))
+        
+        font = pygame.font.SysFont("Comic Sans", 40)
+        
+        press_to_cont = font.render('Press Anywhere To Continue', False, WHITE)
+        press_to_cont_rect = press_to_cont.get_rect()
+        press_to_cont_rect.center = (WIDTH//2, 760)
+        WIN.blit(press_to_cont,press_to_cont_rect)
+
         pygame.display.update()
 
     def draw_grid(self):
@@ -119,7 +259,9 @@ class World:
         
         for x in range(0, WIDTH, TILESIZE):
             for y in range(0, HEIGHT, TILESIZE):
-                WIN.blit(GRASS, (x,y))
+                WIN.blit(GRASS2, (x,y))
+        
+        
         
     def collect_fuel(self):
         for obj in self.fuel:
@@ -129,28 +271,47 @@ class World:
 
             obj.show()
 
-        r = random.randint(0,100)
+        self.player.hp -= self.shadow_growth
+        r = random.randint(0,150)
 
-        if r == 1:
-            self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, 20))
+        if r == 1 and len(self.fuel)<5:
+            self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, random.randint(20,50)))
        
     def draw_shadow(self):
         shadow = []
-        for x in range(0, WIDTH, TILESIZE):
-            for y in range(0, HEIGHT, TILESIZE):
-                shadow.append(Shadow(x,y,TILESIZE,TILESIZE))
+        for x in range(0, WIDTH, TILESIZE//2):
+            for y in range(0, HEIGHT, TILESIZE//2):
+                shadow.append(Shadow(x,y,TILESIZE//2,TILESIZE//2))
 
         for obj in shadow:
             if obj.radius(self.player)>self.player.hp:
                 obj.show()
 
+    def draw_walls(self):
+        self.walls = []
+        self.water = []
+        for row, tiles in enumerate(self.map_data):
+            for col, tile in enumerate(tiles):
+                if tile == '1':
+                    self.walls.append(Wall(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
+                if tile == '2':
+                    self.water.append(Water(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
+        for obj in self.walls:
+            obj.show()
+        for obj in self.water:
+            obj.show()
+
+        
+    
+
 
 def main():
 
     world = World()
-
+    obsticles = world.walls + world.water
     clock = pygame.time.Clock()
     run = True
+    playing = False
 
     while run:
 
@@ -159,12 +320,20 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+        if playing == False:
+            world.draw_start()
 
-        keys_pressed = pygame.key.get_pressed()
+            if pygame.mouse.get_pressed()[0]:
+                world.player.hp = world.starting_hp
+                playing = True
         
-        world.player.player_movement(keys_pressed)
-        world.draw()
-        world.collect_fuel()
+        if playing == True:
+            keys_pressed = pygame.key.get_pressed()
+            world.player.player_movement(keys_pressed, obsticles)
+            world.draw_game()
+            world.collect_fuel()
+            if world.player.hp <= 0:
+                playing = False
         
 
 

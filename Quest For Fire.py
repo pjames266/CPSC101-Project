@@ -223,7 +223,16 @@ class World:
 
         self.walls = []
         self.water = []
-
+        for row, tiles in enumerate(self.map_data):
+            for col, tile in enumerate(tiles):
+                if tile == '1':
+                    self.walls.append(Wall(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
+                if tile == '2':
+                    self.water.append(Water(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
+        self.shadow = []
+        for x in range(0, WIDTH, TILESIZE//2):
+            for y in range(0, HEIGHT, TILESIZE//2):
+                self.shadow.append(Shadow(x,y,TILESIZE//2,TILESIZE//2))
     
     def draw_game(self):
         """Draws all the main game features
@@ -278,24 +287,14 @@ class World:
             self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, random.randint(20,50)))
        
     def draw_shadow(self):
-        shadow = []
-        for x in range(0, WIDTH, TILESIZE//2):
-            for y in range(0, HEIGHT, TILESIZE//2):
-                shadow.append(Shadow(x,y,TILESIZE//2,TILESIZE//2))
+        
 
-        for obj in shadow:
+        for obj in self.shadow:
             if obj.radius(self.player)>self.player.hp:
                 obj.show()
 
     def draw_walls(self):
-        self.walls = []
-        self.water = []
-        for row, tiles in enumerate(self.map_data):
-            for col, tile in enumerate(tiles):
-                if tile == '1':
-                    self.walls.append(Wall(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
-                if tile == '2':
-                    self.water.append(Water(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
+        
         for obj in self.walls:
             obj.show()
         for obj in self.water:

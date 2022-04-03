@@ -35,7 +35,9 @@ GRASS4 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_
 GRASS5 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_5.png')), (TILESIZE, TILESIZE))
 GRASS6 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_6.png')), (TILESIZE, TILESIZE))
 GRASS7 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_7.png')), (TILESIZE, TILESIZE))
-PLAYER_TEMP = pygame.image.load(os.path.join('Assets','sam.png'))
+GRASS8 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_8.png')), (TILESIZE, TILESIZE))
+ENEMY_TEMP = pygame.image.load(os.path.join('Assets','sam.png'))
+PLAYER_TEMP = pygame.image.load(os.path.join('Assets','james.png'))
 
 
 
@@ -150,8 +152,52 @@ class Entity(Sprite):
 
 class Enemy(Entity):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, x, y, width, height, hp, vel):
+        """_summary_
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+            hp (int): Health or vision
+            vel (int): movement speed
+        """
+        super().__init__(x, y, width, height, hp, vel)
+
+
+    def enemy_movement(self, other1, other2):
+        """Facilitates Player Movement
+
+        Args:
+            keys_pressed (sequence[bool]): Event that stores key inputs
+            walls (list): List of Objects that are obsticles
+        """
+        
+        if other1.sprite.x > self.sprite.x: #right
+            self.sprite.x += self.vel
+            if other2.collide_with_wall(self):
+                self.sprite.x -= self.vel
+        
+        if other1.sprite.x < self.sprite.x: #left
+            self.sprite.x -= self.vel
+            if other2.collide_with_wall(self):
+                self.sprite.x += self.vel
+
+        if other1.sprite.y < self.sprite.y: #up
+            self.sprite.y -= self.vel
+            if other2.collide_with_wall(self):
+                self.sprite.y += self.vel
+
+        if other1.sprite.y > self.sprite.y: #down
+            self.sprite.y += self.vel
+            if other2.collide_with_wall(self):
+                self.sprite.y -= self.vel
+
+    def show(self):
+
+        ENEMY = pygame.transform.rotate(pygame.transform.scale(ENEMY_TEMP, (self.sprite.width,self.sprite.height)), 0)
+        WIN.blit(ENEMY, (self.sprite.x,self.sprite.y))
 
 class Player(Entity):
     
@@ -167,39 +213,37 @@ class Player(Entity):
             vel (int): movement speed
         """
         super().__init__(x, y, width, height, hp, vel)
-        
 
-    def player_movement(self, keys_pressed, walls):
+
+    def player_movement(self, keys_pressed, other):
         """Facilitates Player Movement
 
         Args:
             keys_pressed (sequence[bool]): Event that stores key inputs
             walls (list): List of Objects that are obsticles
         """
-        if not self.collide_with_wall(walls):
-            if keys_pressed[pygame.K_a] and self.sprite.x - self.vel > 0: #left
-                self.sprite.x -= self.vel
-            
-            if keys_pressed[pygame.K_d] and self.sprite.x + self.vel + self.sprite.width < WIDTH: #right
+        
+        if keys_pressed[pygame.K_a] and self.sprite.x - self.vel > 0: #left
+            self.sprite.x -= self.vel
+            if other.collide_with_wall(self):
                 self.sprite.x += self.vel
+        
+        if keys_pressed[pygame.K_d] and self.sprite.x + self.vel + self.sprite.width < WIDTH: #right
+            self.sprite.x += self.vel
+            if other.collide_with_wall(self):
+                self.sprite.x -= self.vel
 
-            if keys_pressed[pygame.K_w] and self.sprite.y - self.vel > 0: #Up
-                self.sprite.y -= self.vel
-
-            if keys_pressed[pygame.K_s] and self.sprite.y + self.vel + self.sprite.height < HEIGHT - 10: #down
+        if keys_pressed[pygame.K_w] and self.sprite.y - self.vel > 0: #Up
+            self.sprite.y -= self.vel
+            if other.collide_with_wall(self):
                 self.sprite.y += self.vel
 
-    def collide_with_wall(self, walls):
+        if keys_pressed[pygame.K_s] and self.sprite.y + self.vel + self.sprite.height < HEIGHT - 10: #down
+            self.sprite.y += self.vel
+            if other.collide_with_wall(self):
+                self.sprite.y -= self.vel
 
-        for wall in walls:
-            if self.sprite.colliderect(wall.sprite):
-                
-                return True
-                
-        return False
-
-            
-
+    
     def show(self):
 
         PLAYER = pygame.transform.rotate(pygame.transform.scale(PLAYER_TEMP, (self.sprite.width,self.sprite.height)), 0)
@@ -211,9 +255,12 @@ class World:
     def __init__(self):
         
         self.starting_hp = 300
+       
         self.player = Player(500,500,TILESIZE,TILESIZE,self.starting_hp,6)
+        self.enemy = Enemy(100,100,TILESIZE,TILESIZE,self.starting_hp,3)
         self.fuel = []
-
+        self.player_start = ()
+        self.enemy_start = ()
         self.map_data = []
         with open(os.path.join('Assets', 'map.txt'), 'rt') as f:
             for line in f:
@@ -229,10 +276,19 @@ class World:
                     self.walls.append(Wall(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
                 if tile == '2':
                     self.water.append(Water(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
+                if tile == 'P':
+                    self.player_start = (col*TILESIZE, row*TILESIZE)
+                if tile == 'E':
+                    self.enemy_start = (col*TILESIZE, row*TILESIZE)
+
+
         self.shadow = []
         for x in range(0, WIDTH, TILESIZE//2):
             for y in range(0, HEIGHT, TILESIZE//2):
                 self.shadow.append(Shadow(x,y,TILESIZE//2,TILESIZE//2))
+
+        self.player = Player(self.player_start[0],self.player_start[1],TILESIZE,TILESIZE,self.starting_hp,6)
+        self.enemy = Enemy(self.enemy_start[0],self.enemy_start[1],TILESIZE,TILESIZE,self.starting_hp,3)
     
     def draw_game(self):
         """Draws all the main game features
@@ -240,9 +296,12 @@ class World:
         WIN.fill(DARKGREY)
         self.draw_grid()
         self.player.show()
+        self.enemy.show()
+        self.eaten()
         self.collect_fuel()
         self.draw_walls()
         self.draw_shadow()
+        
         pygame.display.update()
 
     def draw_start(self):
@@ -270,25 +329,29 @@ class World:
             for y in range(0, HEIGHT, TILESIZE):
                 WIN.blit(GRASS2, (x,y))
         
-        
-        
+    def eaten(self):
+        if self.player.sprite.colliderect(self.enemy.sprite):
+            self.player.hp -= 20
+
     def collect_fuel(self):
         for obj in self.fuel:
             if self.player.sprite.colliderect(obj.sprite):
                 self.fuel.remove(obj)
                 self.player.hp += obj.fuel
+            
+            if self.collide_with_wall(obj):
+                self.fuel.remove(obj)
 
             obj.show()
 
         self.player.hp -= self.shadow_growth
-        r = random.randint(0,150)
+        r = random.randint(0,50)
 
-        if r == 1 and len(self.fuel)<5:
+        if r == 1 and len(self.fuel)<6:
             self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, random.randint(20,50)))
        
+    
     def draw_shadow(self):
-        
-
         for obj in self.shadow:
             if obj.radius(self.player)>self.player.hp:
                 obj.show()
@@ -300,14 +363,29 @@ class World:
         for obj in self.water:
             obj.show()
 
-        
+    def collide_with_wall(self, other):
+
+        obsticles = self.walls + self.water
+        for obsticle in obsticles:
+            if obsticle.sprite.colliderect(other.sprite):
+                
+                return True
+                
+        return False
+
+    def world_reset(self):
+        self.player.sprite.x = self.player_start[0] 
+        self.player.sprite.y = self.player_start[1] 
+        self.enemy.sprite.x = self.enemy_start[0] 
+        self.enemy.sprite.y = self.enemy_start[1] 
+        self.player.hp = self.starting_hp
+        self.fuel = []
     
 
 
 def main():
 
     world = World()
-    obsticles = world.walls + world.water
     clock = pygame.time.Clock()
     run = True
     playing = False
@@ -323,18 +401,19 @@ def main():
             world.draw_start()
 
             if pygame.mouse.get_pressed()[0]:
-                world.player.hp = world.starting_hp
+                
+                world.world_reset()
                 playing = True
         
         if playing == True:
             keys_pressed = pygame.key.get_pressed()
-            world.player.player_movement(keys_pressed, obsticles)
+            world.player.player_movement(keys_pressed, world)
+            world.enemy.enemy_movement(world.player, world)
             world.draw_game()
             world.collect_fuel()
             if world.player.hp <= 0:
                 playing = False
-        
-
+            
 
 if __name__== "__main__":
     main()

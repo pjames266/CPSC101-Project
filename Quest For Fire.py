@@ -23,6 +23,7 @@ BLACK = (0,0,0)
 RED = (255,0,0)
 YELLOW = (255,255,0)
 GREEN = (0,255,0)
+DARKGREEN = (6,84,31)
 BLUE = (0,0,255)
 DARKGREY = (40, 40, 40)
 LIGHTGREY = (100, 100, 100)
@@ -111,6 +112,22 @@ class Water(Sprite):
     
     def show(self):
         pygame.draw.rect(WIN, BLUE, self.sprite)
+
+class Tree(Sprite):
+    
+    def __init__(self, x, y, width, height):
+        """Water Object
+
+        Args:
+            x (int): x-pos
+            y (int): y-pos
+            width (int): width
+            height (int): height
+        """
+        super().__init__(x, y, width, height)
+    
+    def show(self):
+        pygame.draw.rect(WIN, DARKGREEN, self.sprite)
     
 
 class Fuel(Sprite):
@@ -267,7 +284,7 @@ class World:
                 self.map_data.append(line)
         
         self.shadow_growth = 0.08
-
+        self.tree = []
         self.walls = []
         self.water = []
         for row, tiles in enumerate(self.map_data):
@@ -276,6 +293,8 @@ class World:
                     self.walls.append(Wall(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
                 if tile == '2':
                     self.water.append(Water(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
+                if tile == '3':
+                    self.tree.append(Tree(col*TILESIZE, row*TILESIZE, TILESIZE, TILESIZE))
                 if tile == 'P':
                     self.player_start = (col*TILESIZE, row*TILESIZE)
                 if tile == 'E':
@@ -288,7 +307,7 @@ class World:
                 self.shadow.append(Shadow(x,y,TILESIZE//2,TILESIZE//2))
 
         self.player = Player(self.player_start[0],self.player_start[1],TILESIZE,TILESIZE,self.starting_hp,6)
-        self.enemy = Enemy(self.enemy_start[0],self.enemy_start[1],TILESIZE,TILESIZE,self.starting_hp,3)
+        self.enemy = Enemy(self.enemy_start[0],self.enemy_start[1],TILESIZE,TILESIZE,self.starting_hp,4)
     
     def draw_game(self):
         """Draws all the main game features
@@ -347,7 +366,7 @@ class World:
         self.player.hp -= self.shadow_growth
         r = random.randint(0,50)
 
-        if r == 1 and len(self.fuel)<6:
+        if r == 1 and len(self.fuel)<10:
             self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, random.randint(20,50)))
        
     
@@ -362,10 +381,12 @@ class World:
             obj.show()
         for obj in self.water:
             obj.show()
+        for obj in self.tree:
+            obj.show()
 
     def collide_with_wall(self, other):
 
-        obsticles = self.walls + self.water
+        obsticles = self.walls + self.water + self.tree
         for obsticle in obsticles:
             if obsticle.sprite.colliderect(other.sprite):
                 

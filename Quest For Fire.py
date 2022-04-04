@@ -283,6 +283,7 @@ class World:
             for line in f:
                 self.map_data.append(line)
         
+
         self.shadow_growth = 0.08
         self.tree = []
         self.walls = []

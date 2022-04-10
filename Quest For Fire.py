@@ -8,16 +8,18 @@ pygame.mixer.init()
 
 WIDTH, HEIGHT = 1536, 832
 
-GAME_STATE = 1
 
+#Game Window
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Quest For Fire 1.0")
 FPS = 60
 
+#Tiles
 TILESIZE = 32
 GRIDWIDTH = WIDTH / TILESIZE
 GRIDHEIGHT = HEIGHT / TILESIZE
 
+#Colours
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 RED = (255,0,0)
@@ -28,6 +30,7 @@ BLUE = (0,0,255)
 DARKGREY = (40, 40, 40)
 LIGHTGREY = (100, 100, 100)
 
+#loading images
 BANNER = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'title_card.png')), (WIDTH, HEIGHT))
 GRASS1 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_1.png')), (TILESIZE, TILESIZE))
 GRASS2 = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'grass_texture_2.png')), (TILESIZE, TILESIZE))
@@ -79,6 +82,8 @@ class Shadow(Sprite):
         return ((self.sprite.x-other.sprite.x)**2 + (self.sprite.y - other.sprite.y)**2)**0.5
 
     def show(self):
+        """Show Shadow
+        """
         pygame.draw.rect(WIN, BLACK, self.sprite)
 
 class Wall(Sprite):
@@ -95,6 +100,8 @@ class Wall(Sprite):
         super().__init__(x, y, width, height)
     
     def show(self):
+        """Show Walls
+        """
         pygame.draw.rect(WIN, DARKGREY, self.sprite)
 
 class Water(Sprite):
@@ -111,6 +118,8 @@ class Water(Sprite):
         super().__init__(x, y, width, height)
     
     def show(self):
+        """Show Water
+        """
         pygame.draw.rect(WIN, BLUE, self.sprite)
 
 class Tree(Sprite):
@@ -127,6 +136,8 @@ class Tree(Sprite):
         super().__init__(x, y, width, height)
     
     def show(self):
+        """Shows Tree
+        """
         pygame.draw.rect(WIN, DARKGREEN, self.sprite)
     
 
@@ -146,6 +157,8 @@ class Fuel(Sprite):
         self.fuel = fuel
 
     def show(self):
+        """Shows Fuel icons
+        """
         FUEL = pygame.transform.scale(pygame.image.load(os.path.join('Assets', 'torch.png')), (self.sprite.width, self.sprite.height))
         WIN.blit(FUEL, (self.sprite.x,self.sprite.y))
 
@@ -184,12 +197,13 @@ class Enemy(Entity):
 
 
     def enemy_movement(self, other1, other2):
-        """Facilitates Player Movement
+        """Facilitates Enemy Movement
 
         Args:
-            keys_pressed (sequence[bool]): Event that stores key inputs
-            walls (list): List of Objects that are obsticles
+            other1 (Object): The Object/Player that is being chased
+            other2 (object): List of obsticle objects
         """
+        
         
         if other1.sprite.x > self.sprite.x: #right
             self.sprite.x += self.vel
@@ -262,6 +276,8 @@ class Player(Entity):
 
     
     def show(self):
+        """Shows Player
+        """
 
         PLAYER = pygame.transform.rotate(pygame.transform.scale(PLAYER_TEMP, (self.sprite.width,self.sprite.height)), 0)
         WIN.blit(PLAYER, (self.sprite.x,self.sprite.y))
@@ -270,24 +286,30 @@ class Player(Entity):
 class World:
 
     def __init__(self):
+        """Initializes world setup
+        """
         
         self.starting_hp = 300
        
         self.player = Player(500,500,TILESIZE,TILESIZE,self.starting_hp,6)
         self.enemy = Enemy(100,100,TILESIZE,TILESIZE,self.starting_hp,3)
         self.fuel = []
+        self.shadow_growth = 0.08
+
+       
+        """Creates a map from list of all obsticles in the map.txt file in assets folder
+        """
         self.player_start = ()
         self.enemy_start = ()
         self.map_data = []
-        with open(os.path.join('Assets', 'map.txt'), 'rt') as f:
-            for line in f:
-                self.map_data.append(line)
-        
-
-        self.shadow_growth = 0.08
         self.tree = []
         self.walls = []
         self.water = []
+
+        with open(os.path.join('Assets', 'map.txt'), 'rt') as f:
+            for line in f:
+                self.map_data.append(line)
+
         for row, tiles in enumerate(self.map_data):
             for col, tile in enumerate(tiles):
                 if tile == '1':
@@ -301,12 +323,15 @@ class World:
                 if tile == 'E':
                     self.enemy_start = (col*TILESIZE, row*TILESIZE)
 
-
+        """Draw all shadows
+        """
         self.shadow = []
         for x in range(0, WIDTH, TILESIZE//2):
             for y in range(0, HEIGHT, TILESIZE//2):
                 self.shadow.append(Shadow(x,y,TILESIZE//2,TILESIZE//2))
 
+        """Create player and enemy objects
+        """
         self.player = Player(self.player_start[0],self.player_start[1],TILESIZE,TILESIZE,self.starting_hp,6)
         self.enemy = Enemy(self.enemy_start[0],self.enemy_start[1],TILESIZE,TILESIZE,self.starting_hp,4)
     
@@ -341,6 +366,8 @@ class World:
         pygame.display.update()
 
     def draw_grid(self):
+        """Draws Background
+        """
         for x in range(0, WIDTH, TILESIZE):
             pygame.draw.line(WIN, LIGHTGREY, (x, 0), (x, HEIGHT))
         for y in range(0, HEIGHT, TILESIZE):
@@ -351,10 +378,14 @@ class World:
                 WIN.blit(GRASS2, (x,y))
         
     def eaten(self):
+        """Player takes Damage from enemy
+        """
         if self.player.sprite.colliderect(self.enemy.sprite):
             self.player.hp -= 20
 
     def collect_fuel(self):
+        """Shows and generates fuels as well as detects fuel collection
+        """
         for obj in self.fuel:
             if self.player.sprite.colliderect(obj.sprite):
                 self.fuel.remove(obj)
@@ -372,11 +403,15 @@ class World:
                     self.fuel.remove(obj)
     
     def draw_shadow(self):
+        """Draws Shadows to Screen at certain radius
+        """
         for obj in self.shadow:
             if obj.radius(self.player)>self.player.hp:
                 obj.show()
 
     def draw_walls(self):
+        """Draws Walls and other obsticles
+        """
         
         for obj in self.walls:
             obj.show()
@@ -386,6 +421,14 @@ class World:
             obj.show()
 
     def collide_with_wall(self, other):
+        """Does Collision detection with outside 
+
+        Args:
+            other (list): Takes a list or single entities to be checked for obticle collision
+
+        Returns:
+            bool: True or False
+        """
 
         obsticles = self.walls + self.water + self.tree
         for obsticle in obsticles:
@@ -396,6 +439,9 @@ class World:
         return False
 
     def world_reset(self):
+        """Resets all world info
+        """
+
         self.player.sprite.x = self.player_start[0] 
         self.player.sprite.y = self.player_start[1] 
         self.enemy.sprite.x = self.enemy_start[0] 
@@ -406,6 +452,8 @@ class World:
 
 
 def main():
+    """Main program loop
+    """
 
     world = World()
     clock = pygame.time.Clock()

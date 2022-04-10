@@ -322,6 +322,7 @@ class World:
         self.draw_walls()
         self.draw_shadow()
         
+        
         pygame.display.update()
 
     def draw_start(self):
@@ -358,18 +359,17 @@ class World:
             if self.player.sprite.colliderect(obj.sprite):
                 self.fuel.remove(obj)
                 self.player.hp += obj.fuel
-            
-            if self.collide_with_wall(obj):
-                self.fuel.remove(obj)
 
             obj.show()
 
         self.player.hp -= self.shadow_growth
-        r = random.randint(0,50)
+        r = random.randint(0,230)
 
-        if r == 1 and len(self.fuel)<10:
-            self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,WIDTH),TILESIZE, TILESIZE, random.randint(20,50)))
-       
+        if r == 1 and len(self.fuel)<5:
+            self.fuel.append(Fuel(random.randint(0,WIDTH),random.randint(0,HEIGHT),TILESIZE, TILESIZE, random.randint(20,50)))
+            for obj in self.fuel:
+                if self.collide_with_wall(obj):
+                    self.fuel.remove(obj)
     
     def draw_shadow(self):
         for obj in self.shadow:
